@@ -1,0 +1,35 @@
+services:
+  db:
+    image: '$MYSQL_IMAGE'
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE=$DB_NAME
+      - MYSQL_USER=$DB_USER
+      - MYSQL_PASSWORD=$DB_PASSWORD
+    volumes:
+      - './mysql/init.sql:/docker-entrypoint-initdb.d/init.sql'
+      - './mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf'
+      - 'db-data:/var/lib/mysql'
+  webserver:
+    build:
+      context: '..'
+      dockerfile: 'docker/Dockerfile'
+    image: '$PROJECT_webserver'
+    ports:
+      - '9271:80'
+    volumes:
+      - '../app:/var/www/html'
+      - './php/php.ini:/etc/php/php.ini'
+      - './php/xdebug$XDEBUG_MAJOR.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini'
+      - '$PERSISTENT_DIR:/var/www/html/$PERSISTENT_DIR'
+      - './apache/site.conf:/etc/apache2/sites-available/000-default.conf'
+  pma:
+    image: 'phpmyadmin'
+    ports:
+      - '9999:80'
+
+volumes:
+  db-data: 
+    name: '$PROJECT_db_data'
+  $PERSISTENT_DIR:
+    name: '$PROJECT_PERSISTENT_DIR'
